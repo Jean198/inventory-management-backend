@@ -5,13 +5,17 @@ const mongoose = require("mongoose");
 const bodyParser=require('body-parser')
 const cors = require("cors");
 const PORT = process.env.PORT || 5000;
+const userRoute=require('./routes/userRoute')
 mongoose.set('strictQuery', true)
 
 //Middlewares
-
 app.use(express.json())
 app.use(express.urlencoded({extended:false}))
 app.use(bodyParser.json())
+
+
+//Routes middleware
+app.use("/api/users", userRoute)
 
 
 app.get("/", (req,res)=>{
