@@ -3,9 +3,12 @@ const asyncHandler = require('express-async-handler');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
+// Generate token
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '1d' });
 };
+
+//-------------------------------------------------------------------------------------
 
 //Register user
 const registerUser = asyncHandler(async (req, res) => {
@@ -52,8 +55,9 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 });
 
-//Login User
+//--------------------------------------------------------------------------------------------------------
 
+//Login User
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
@@ -71,16 +75,17 @@ const loginUser = asyncHandler(async (req, res) => {
 
   //If user found, check if password is correct!
   const passwordIsCorrect = await bcrypt.compare(password, user.password);
+
   if (user && passwordIsCorrect) {
     // Generate Token
     const token = generateToken(user._id);
+
     //Send Http-only cookie
     res.cookie('token', token, {
       httpOnly: true,
       expires: new Date(Date.now() + 1000 * 86400),
       sameSite: 'none',
     });
-
     const { _id, name, email, photo, phone, bio } = user;
     res.status(201).json({
       id: _id,
@@ -97,7 +102,21 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 });
 
+//-----------------------------------------------------------------------------------------------------------------------
+
+// Logout user
+const logoutUser = asyncHandler(async (req, res) => {
+  res.cookie('token', '', {
+    httpOnly: true,
+    expires: new Date(0),
+    sameSite: 'none',
+  });
+
+  res.status(200).json({ message: 'User logout succesfully!' });
+});
+
 module.exports = {
   registerUser,
   loginUser,
+  logoutUser,
 };
