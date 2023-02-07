@@ -1,5 +1,5 @@
-const User = require("../models/userModel");
-const asyncHandler = require("express-async-handler");
+const User = require('../models/userModel');
+const asyncHandler = require('express-async-handler');
 
 //Register user
 const registerUser = asyncHandler(async (req, res) => {
@@ -8,19 +8,20 @@ const registerUser = asyncHandler(async (req, res) => {
   //Validation
   if (!name || !email || !password) {
     res.status(400);
-    throw new Error("Please fill in all required fields");
+    throw new Error('Please fill in all required fields');
   }
   if (password.length < 6) {
     res.status(400);
-    throw new Error("Password must be atleast to 6 characters");
+    throw new Error('Password must be atleast to 6 characters');
   }
 
   //Check if user already exists
   const userExist = await User.findOne({ email });
   if (userExist) {
     res.status(400);
-    throw new Error("Email has already been used");
+    throw new Error('Email has already been used');
   }
+
   //Create new user
   const user = await User.create({
     name: name,
@@ -40,7 +41,7 @@ const registerUser = asyncHandler(async (req, res) => {
     });
   } else {
     res.status(400);
-    throw new Error("Invalid user data");
+    throw new Error('Invalid user data');
   }
 });
 

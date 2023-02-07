@@ -17,6 +17,10 @@ app.use(bodyParser.json());
 //Routes middleware
 app.use('/api/users', userRoute);
 
+app.get('/', (req, res) => {
+  res.send('Homepage');
+});
+
 //Error middleware
 app.use(errorHandler);
 
