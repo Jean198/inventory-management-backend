@@ -131,7 +131,7 @@ const getUser = asyncHandler(async (req, res) => {
       bio,
     });
   } else {
-    res.status(400);
+    res.status(404);
     throw new Error('Not found!');
   }
 });
@@ -152,8 +152,47 @@ const loginStatus = asyncHandler(async (req, res) => {
   return res.json(false);
 });
 
+//-------------------------------------------------------------------------------------------------------------------------
+
+//Update User
 const updateUser = asyncHandler(async (req, res) => {
+  console.log(req.body);
   const user = await User.findById(req.userId); // from the authMiddleware
+
+  if (user) {
+    const { _id, name, email, photo, phone, bio } = user;
+    user.email = email;
+    user.name = req.body.name || name;
+    user.phone = req.body.phone || phone;
+    user.bio = req.body.bio || bio;
+    user.photo = req.body.photo || photo;
+
+    const updatedUser = await user.save();
+
+    res.status(201).json({
+      id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      photo: updatedUser.photo,
+      phone: updatedUser.phone,
+      bio: updatedUser.bio,
+    });
+  } else {
+    res.status(404);
+    throw new Error('User Not found!');
+  }
+});
+
+//-------------------------------------------------------------------------------------------------------
+
+//Change password
+
+const changePassword = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.userId);
+
+  const { oldPassword, password } = req.body;
+
+  //validate
 });
 
 module.exports = {
@@ -163,4 +202,5 @@ module.exports = {
   getUser,
   loginStatus,
   updateUser,
+  changePassword,
 };
