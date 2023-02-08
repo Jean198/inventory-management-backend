@@ -1,7 +1,10 @@
 const User = require('../models/userModel');
+const Token = require('../models/tokenModel');
 const asyncHandler = require('express-async-handler');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
+const sendEmail = require('../utils/sendEmail');
 
 // Generate token
 const generateToken = (id) => {
@@ -190,9 +193,87 @@ const updateUser = asyncHandler(async (req, res) => {
 const changePassword = asyncHandler(async (req, res) => {
   const user = await User.findById(req.userId);
 
-  const { oldPassword, password } = req.body;
+  if (!user) {
+    res.status(400);
+    throw new Error('You need to login before you make changes');
+  }
 
+  const { oldPassword, newPassword } = req.body;
   //validate
+  if (!oldPassword || !newPassword) {
+    res.status(400);
+    throw new Error('Both fields are required!');
+  }
+
+  //Check if oldPassword matches the one in the database
+
+  const passwordIsCorrect = await bcrypt.compare(oldPassword, user.password);
+
+  //Save new password.
+  if (user && passwordIsCorrect) {
+    user.password = newPassword;
+    await user.save();
+    res.status(200).send('Password changed succesfully!');
+  } else {
+    res.status(400);
+    throw new Error('Incorrect old password');
+  }
+});
+
+//--------------------------------------------------------------------------
+
+//Forgot password
+const forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    res.status(404);
+    throw new Error('User does not exist');
+  }
+
+  //create reset token
+
+  let resetToken = crypto.randomBytes(32).toString('hex') + user._id;
+  //Hash token before saving it to the database
+
+  const hashedToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+
+  //Save hashed token to database
+
+  await new Token({
+    userId: user._id,
+    token: hashedToken,
+    createdAt: Date.now(),
+    expiresAt: Date.now() + 30 * (60 * 1000), //Thirty minutes
+  }).save();
+
+  //construct reset Url
+  const resetUrl = `${process.env.FRONTEND_URL}/resetpassword/${resetToken}`;
+
+  //COnstruct reset email
+  const message = `<h2>Hello${user.name}</h2>
+  <p>Please use the url below to reset your password</p>
+  <p>This reset link is valid for only 30 minutes</p>
+  <a href=${resetUrl} clicktracking=off></a>
+  <p>Regards,</p>
+  <p> <b>Jean's Code</b> team</p>
+  `;
+
+  const subject = 'Password reset request';
+  const send_to = user.email;
+  const sent_from = process.env.EMAIL_USER;
+
+  try {
+    await sendEmail(subject, message, send_to, sent_from);
+    res.status(200).json({ success: true, message: 'Reset email sent' });
+  } catch {
+    res.status(500);
+    throw new Error('EMail not sent, please try again');
+  }
 });
 
 module.exports = {
@@ -203,4 +284,5 @@ module.exports = {
   loginStatus,
   updateUser,
   changePassword,
+  forgotPassword,
 };
