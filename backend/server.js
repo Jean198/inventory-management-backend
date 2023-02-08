@@ -9,13 +9,15 @@ const userRoute = require('./routes/userRoute');
 const errorHandler = require('../backend/middlewares/errorMiddleware');
 mongoose.set('strictQuery', true);
 const cookieParser = require('cookie-parser');
+var expressBusboy = require('express-busboy'); //This helps to send form-data from postman!!!!!!!!!!!!!!!!!!!
 
 //Middlewares
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(express.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors());
+expressBusboy.extend(app); //This helps to send form-data from postman!!!!!!!!!!!!!!!!!!!
 
 //Routes middleware
 app.use('/api/users', userRoute);
