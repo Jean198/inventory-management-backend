@@ -6,6 +6,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const PORT = process.env.PORT || 5000;
 const userRoute = require('./routes/userRoute');
+const productRoute = require('./routes/productRoute');
 const errorHandler = require('../backend/middlewares/errorMiddleware');
 mongoose.set('strictQuery', true);
 const cookieParser = require('cookie-parser');
@@ -21,6 +22,7 @@ expressBusboy.extend(app); //This helps to send form-data from postman!!!!!!!!!!
 
 //Routes middleware
 app.use('/api/users', userRoute);
+app.use('/api/products', productRoute);
 
 app.get('/', (req, res) => {
   res.send('Homepage');
