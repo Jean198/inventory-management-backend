@@ -161,6 +161,7 @@ const loginStatus = asyncHandler(async (req, res) => {
 const updateUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.userId); // from the authMiddleware
 
+  console.log(req);
   if (user) {
     const { _id, name, email, photo, phone, bio } = user;
     user.email = email;
@@ -224,6 +225,7 @@ const changePassword = asyncHandler(async (req, res) => {
 //Forgot password
 const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
+  console.log(req.body);
   const user = await User.findOne({ email });
 
   if (!user) {
