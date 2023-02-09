@@ -159,7 +159,6 @@ const loginStatus = asyncHandler(async (req, res) => {
 
 //Update User
 const updateUser = asyncHandler(async (req, res) => {
-  console.log(req.body);
   const user = await User.findById(req.userId); // from the authMiddleware
 
   if (user) {
@@ -232,6 +231,11 @@ const forgotPassword = asyncHandler(async (req, res) => {
     throw new Error('User does not exist');
   }
 
+  let token = await Token.findOne({ userId: user._id });
+  if (token) {
+    await token.deleteOne();
+  }
+
   //create reset token
 
   let resetToken = crypto.randomBytes(32).toString('hex') + user._id;
@@ -255,10 +259,10 @@ const forgotPassword = asyncHandler(async (req, res) => {
   const resetUrl = `${process.env.FRONTEND_URL}/resetpassword/${resetToken}`;
 
   //COnstruct reset email
-  const message = `<h2>Hello${user.name}</h2>
+  const message = `<h2>Hello ${user.name}</h2>
   <p>Please use the url below to reset your password</p>
   <p>This reset link is valid for only 30 minutes</p>
-  <a href=${resetUrl} clicktracking=off></a>
+  <a href=${resetUrl} clicktracking=off>${resetUrl}</a>
   <p>Regards,</p>
   <p> <b>Jean's Code</b> team</p>
   `;
@@ -272,8 +276,41 @@ const forgotPassword = asyncHandler(async (req, res) => {
     res.status(200).json({ success: true, message: 'Reset email sent' });
   } catch {
     res.status(500);
-    throw new Error('EMail not sent, please try again');
+    throw new Error('Email not sent, please try again');
   }
+});
+
+//------------------------------------------------------------------------------------------------------
+
+//Reset password
+const resetPassword = asyncHandler(async (req, res) => {
+  const { password } = req.body;
+  const { resetToken } = req.params;
+
+  //Has token and compare it it its hashed version in the database
+  const hashedToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+
+  //FInd token in database
+  const userToken = await Token.findOne({
+    token: hashedToken,
+    expiresAt: { $gt: Date.now() },
+  });
+
+  if (!userToken) {
+    res.status(404);
+    throw new Error('Invalid or Expired token');
+  }
+
+  //Find User
+  const user = await User.findOne({ _id: userToken.userId });
+  user.password = password;
+  await user.save();
+  res.status(200).json({
+    message: 'Password reset successful, Please login',
+  });
 });
 
 module.exports = {
@@ -285,4 +322,5 @@ module.exports = {
   updateUser,
   changePassword,
   forgotPassword,
+  resetPassword,
 };
