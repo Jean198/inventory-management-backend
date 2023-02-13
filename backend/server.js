@@ -11,6 +11,7 @@ const errorHandler = require('../backend/middlewares/errorMiddleware');
 mongoose.set('strictQuery', true);
 const cookieParser = require('cookie-parser');
 const path = require('path');
+const contactRoute = require('./routes/contactRoute');
 //const expressBusboy = require('express-busboy'); //This helps to send form-data from postman!!!!!!!!!!!!!!!!!!!
 
 //Middlewares
@@ -27,6 +28,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 //Routes middleware
 app.use('/api/users', userRoute);
 app.use('/api/products', productRoute);
+app.use('/api/contact', contactRoute);
 
 app.get('/', (req, res) => {
   res.send('Homepage');

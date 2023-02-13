@@ -33,7 +33,6 @@ const createProduct = asyncHandler(async (req, res) => {
     };
   }
 
-  console.log(req.body);
   // Create Product
   const product = await Product.create({
     user: req.userId,
