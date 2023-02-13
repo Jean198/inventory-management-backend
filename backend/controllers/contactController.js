@@ -5,7 +5,7 @@ const sendEmail = require('../utils/sendEmail');
 
 const contactUs = asyncHandler(async (req, res) => {
   const { subject, message } = req.body;
-  const user = await User.findById(req.user._id);
+  const user = await User.findById(req.userId);
 
   if (!user) {
     res.status(400);
